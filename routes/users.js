@@ -1,12 +1,12 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
-const Thread = require('../models/Thread');
+const Thread = require('../models/Threads');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
+const jwt = require('jsonwebtoken');
 
 const router = express.Router();
 
-// Get current user profile
 router.get('/profile', requireAuth, async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
@@ -14,7 +14,6 @@ router.get('/profile', requireAuth, async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Get user stats
     const threadCount = await Thread.countDocuments({ author: user._id });
     const replyCount = await Thread.aggregate([
       { $unwind: '$replies' },
@@ -33,8 +32,20 @@ router.get('/profile', requireAuth, async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
+router.post('/register', async (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+    const existingUser = await User.findOne({ email });
+    if (existingUser) return res.status(400).json({ message: 'Email already exists' });
 
-// Get user by ID
+    const user = new User({ username, email, password });
+    await user.save();
+    res.status(201).json({ message: 'User created', user });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 router.get('/:id', async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select('-password');
@@ -68,8 +79,30 @@ router.get('/:id', async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
+router.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-// Update user profile
+    // Find user by email
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ message: 'Invalid email or password' });
+
+    // Compare password
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) return res.status(400).json({ message: 'Invalid email or password' });
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET, // make sure JWT_SECRET is in .env
+      { expiresIn: '1d' }
+    );
+
+    res.json({ message: 'Login successful', token });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
 router.put('/profile', requireAuth, [
   body('username')
     .optional()
@@ -122,7 +155,6 @@ router.put('/profile', requireAuth, [
   }
 });
 
-// Get all users (Admin only)
 router.get('/', requireAuth, requireAdmin, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -151,7 +183,6 @@ router.get('/', requireAuth, requireAdmin, async (req, res) => {
   }
 });
 
-// Update user role (Admin only)
 router.put('/:id/role', requireAuth, requireAdmin, [
   body('role')
     .isIn(['user', 'moderator', 'admin'])
@@ -180,7 +211,6 @@ router.put('/:id/role', requireAuth, requireAdmin, [
   }
 });
 
-// Ban/Unban user (Admin only)
 router.put('/:id/status', requireAuth, requireAdmin, [
   body('isActive')
     .isBoolean()

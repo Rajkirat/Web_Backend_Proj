@@ -1,12 +1,11 @@
 const express = require('express');
 const { body, validationResult, query } = require('express-validator');
-const Thread = require('../models/Thread');
+const Thread = require('../models/Threads');
 const Tag = require('../models/Tag');
 const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Get all threads with pagination and filters
 router.get('/', [
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1, max: 50 }),
@@ -86,7 +85,6 @@ router.get('/', [
   }
 });
 
-// Get single thread
 router.get('/:id', async (req, res) => {
   try {
     const thread = await Thread.findByIdAndUpdate(
@@ -110,7 +108,6 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Create new thread
 router.post('/', requireAuth, [
   body('title')
     .trim()
@@ -171,7 +168,6 @@ router.post('/', requireAuth, [
   }
 });
 
-// Update thread
 router.put('/:id', requireAuth, [
   body('title').optional().trim().isLength({ min: 5, max: 200 }),
   body('content').optional().trim().isLength({ min: 10, max: 10000 }),
@@ -211,7 +207,6 @@ router.put('/:id', requireAuth, [
   }
 });
 
-// Delete thread
 router.delete('/:id', requireAuth, async (req, res) => {
   try {
     const thread = await Thread.findById(req.params.id);

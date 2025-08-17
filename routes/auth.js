@@ -6,14 +6,13 @@ const User = require('../models/User');
 
 const router = express.Router();
 
-// Generate JWT
 const generateToken = (userId) => {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET || 'your-secret-key', {
     expiresIn: '7d'
   });
 };
 
-// Register
+
 router.post('/register', [
   body('username')
     .trim()
@@ -63,7 +62,6 @@ router.post('/register', [
   }
 });
 
-// Login
 router.post('/login', [
   body('email').isEmail().normalizeEmail().withMessage('Valid email required'),
   body('password').notEmpty().withMessage('Password required')

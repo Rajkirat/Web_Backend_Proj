@@ -1,11 +1,10 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
-const Thread = require('../models/Thread');
+const Thread = require('../models/Threads');
 const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Add reply to thread
 router.post('/:threadId', requireAuth, [
   body('content')
     .trim()
@@ -42,7 +41,6 @@ router.post('/:threadId', requireAuth, [
     };
 
     if (parentReply) {
-      // Find parent reply and add nested reply
       const findAndAddReply = (replies, parentId, newReply) => {
         for (let i = 0; i < replies.length; i++) {
           if (replies[i]._id.toString() === parentId) {
@@ -75,7 +73,6 @@ router.post('/:threadId', requireAuth, [
   }
 });
 
-// Update reply
 router.put('/:threadId/reply/:replyId', requireAuth, [
   body('content')
     .trim()
@@ -95,7 +92,6 @@ router.put('/:threadId/reply/:replyId', requireAuth, [
       return res.status(404).json({ message: 'Thread not found' });
     }
 
-    // Find and update reply
     const findAndUpdateReply = (replies, replyId, newContent, userId) => {
       for (let i = 0; i < replies.length; i++) {
         if (replies[i]._id.toString() === replyId) {
@@ -131,7 +127,6 @@ router.put('/:threadId/reply/:replyId', requireAuth, [
   }
 });
 
-// Delete reply
 router.delete('/:threadId/reply/:replyId', requireAuth, async (req, res) => {
   try {
     const thread = await Thread.findById(req.params.threadId);
@@ -140,8 +135,7 @@ router.delete('/:threadId/reply/:replyId', requireAuth, async (req, res) => {
       return res.status(404).json({ message: 'Thread not found' });
     }
 
-    // Find and remove reply
-    const findAndRemoveReply = (replies, replyId, userId, isAdmin) => {
+        const findAndRemoveReply = (replies, replyId, userId, isAdmin) => {
       for (let i = 0; i < replies.length; i++) {
         if (replies[i]._id.toString() === replyId) {
           if (replies[i].author.toString() !== userId && !isAdmin) {

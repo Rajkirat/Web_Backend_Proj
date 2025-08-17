@@ -1,12 +1,11 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
-const Thread = require('../models/Thread');
+const Thread = require('../models/Threads');
 const User = require('../models/User');
 const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Vote on thread
 router.post('/thread/:threadId', requireAuth, [
   body('type')
     .isIn(['upvote', 'downvote'])
@@ -68,7 +67,6 @@ router.post('/thread/:threadId', requireAuth, [
   }
 });
 
-// Vote on reply
 router.post('/thread/:threadId/reply/:replyId', requireAuth, [
   body('type')
     .isIn(['upvote', 'downvote'])

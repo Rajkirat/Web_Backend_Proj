@@ -31,7 +31,7 @@ const replySchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     default: null
   },
-  replies: [this], // Self-reference for nested replies
+  replies: [this], 
   isEdited: {
     type: Boolean,
     default: false

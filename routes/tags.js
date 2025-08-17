@@ -1,12 +1,11 @@
 const express = require('express');
 const { body, validationResult, query } = require('express-validator');
 const Tag = require('../models/Tag');
-const Thread = require('../models/Thread');
+const Thread = require('../models/Threads');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Get all tags with pagination
 router.get('/', [
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1, max: 100 }),
@@ -48,7 +47,6 @@ router.get('/', [
   }
 });
 
-// Get popular tags
 router.get('/popular', async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 20;
@@ -62,8 +60,7 @@ router.get('/popular', async (req, res) => {
   }
 });
 
-// Get single tag with threads
-router.get('/:id', async (req, res) => {
+  router.get('/:id', async (req, res) => {
   try {
     const tag = await Tag.findById(req.params.id);
     if (!tag) {
@@ -85,7 +82,6 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Create tag (Admin only)
 router.post('/', requireAuth, requireAdmin, [
   body('name')
     .trim()
@@ -110,7 +106,6 @@ router.post('/', requireAuth, requireAdmin, [
 
     const { name, description, color } = req.body;
 
-    // Check if tag exists
     const existingTag = await Tag.findOne({ name });
     if (existingTag) {
       return res.status(400).json({ message: 'Tag already exists' });
@@ -125,7 +120,6 @@ router.post('/', requireAuth, requireAdmin, [
   }
 });
 
-// Update tag (Admin only)
 router.put('/:id', requireAuth, requireAdmin, [
   body('name')
     .optional()
@@ -165,7 +159,6 @@ router.put('/:id', requireAuth, requireAdmin, [
   }
 });
 
-// Delete tag (Admin only)
 router.delete('/:id', requireAuth, requireAdmin, async (req, res) => {
   try {
     const tag = await Tag.findById(req.params.id);
